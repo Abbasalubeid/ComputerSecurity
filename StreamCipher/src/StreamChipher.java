@@ -10,6 +10,9 @@ public class StreamChipher {
             System.exit(1);
         }
 
+        byte[] hej = getBytesFromFile(args[1]);
+        writeBytesToFile(args[2], hej);
+
     }
 
     private static byte[] getBytesFromFile(String file){
@@ -21,8 +24,9 @@ public class StreamChipher {
 
         try {
             FileInputStream input = new FileInputStream(file);
+            byte[] data = input.readAllBytes();
             input.close();
-            return input.readAllBytes();
+            return data;
         } catch (Exception e) {
             System.out.println("Could not read file");
             return null;
@@ -39,7 +43,7 @@ public class StreamChipher {
             output.write(bytesToWrite);
             output.close();
         } catch (Exception e) {
-            System.out.println("Could not write to file");
+            System.out.println("Could not write to file" + e.getMessage());
             System.exit(1);
         }
     }
