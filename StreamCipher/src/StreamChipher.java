@@ -18,7 +18,7 @@ public class StreamChipher {
     private static byte[] getBytesFromFile(String file){
         Path inputFilePath = Path.of(file);
         if (!Files.exists(inputFilePath)) {
-            System.out.println("Input file does not exist");
+            System.err.println("Input file does not exist");
             System.exit(1);
         }
 
@@ -28,7 +28,7 @@ public class StreamChipher {
             input.close();
             return data;
         } catch (Exception e) {
-            System.out.println("Could not read file");
+            System.err.println("Could not read file");
             return null;
         }
     }
@@ -36,14 +36,14 @@ public class StreamChipher {
     private static void writeBytesToFile(String file, byte[] bytesToWrite){
         Path outputFilePath = Path.of(file);
         if (Files.exists(outputFilePath)) {
-            System.out.println("Warning: output file already exists and will be overwritten");
+            System.err.println("Warning: output file already exists and will be overwritten");
         }
         try {
             FileOutputStream output = new FileOutputStream(file);
             output.write(bytesToWrite);
             output.close();
         } catch (Exception e) {
-            System.out.println("Could not write to file" + e.getMessage());
+            System.err.println("Could not write to file" + e.getMessage());
             System.exit(1);
         }
     }
