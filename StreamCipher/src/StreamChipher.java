@@ -16,7 +16,7 @@ public class StreamChipher {
     private static byte[] getBytesFromFile(String file){
         Path inputFilePath = Path.of(file);
         if (!Files.exists(inputFilePath)) {
-            System.out.println("Error: input file does not exist.");
+            System.out.println("Input file does not exist.");
             System.exit(1);
         }
 
