@@ -9,8 +9,13 @@ public class StreamChipher {
             System.err.println("Invalid number of arguments, args: <key> <infile> <outfile>");
             System.exit(1);
         }
-
-        int key = Integer.parseInt(args[0]);
+        int key = 0;
+        try {
+        key = Integer.parseInt(args[0]);
+        } catch (Exception e) {
+            System.err.println("Invalid key");
+            System.exit(1);
+        }
         byte[] m = getBytesFromFile(args[1]);
         byte [] c = cipher(key, m);
         writeBytesToFile(args[2], c);
