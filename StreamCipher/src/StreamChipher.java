@@ -10,8 +10,10 @@ public class StreamChipher {
             System.exit(1);
         }
 
-        byte[] hej = getBytesFromFile(args[1]);
-        writeBytesToFile(args[2], hej);
+        int key = Integer.parseInt(args[0]);
+        byte[] m = getBytesFromFile(args[1]);
+        byte [] c = cipher(key, m);
+        writeBytesToFile(args[2], c);
 
     }
 
@@ -43,8 +45,25 @@ public class StreamChipher {
             output.write(bytesToWrite);
             output.close();
         } catch (Exception e) {
-            System.err.println("Could not write to file" + e.getMessage());
+            System.err.println("Could not write to file");
             System.exit(1);
         }
+    }
+
+    private static byte[] cipher(int seed, byte[] plaintext){
+        try {
+            Random rnd = new Random(seed);
+            byte[] cipherBytes = new byte[plaintext.length];
+            for (int i = 0; i < plaintext.length; i++) {
+                cipherBytes[i] = (byte) (plaintext[i] ^ rnd.nextInt(256));
+            }
+            return cipherBytes;
+        } catch (Exception e) {
+            System.err.println("Encryption fail " + e);
+            return null;
+        }
+
+
+        
     }
 }
