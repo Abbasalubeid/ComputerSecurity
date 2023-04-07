@@ -10,7 +10,6 @@ public class StreamChipher {
             System.exit(1);
         }
 
-
     }
 
     private static byte[] getBytesFromFile(String file){
@@ -26,6 +25,20 @@ public class StreamChipher {
         } catch (Exception e) {
             System.out.println("Could not read file");
             return null;
+        }
+    }
+
+    private static void writeBytesToFile(String file, byte[] bytesToWrite){
+        Path outputFilePath = Path.of(file);
+        if (Files.exists(outputFilePath)) {
+            System.out.println("Warning: output file already exists and will be overwritten");
+        }
+        try {
+            FileOutputStream output = new FileOutputStream(file);
+            output.write(bytesToWrite);
+        } catch (Exception e) {
+            System.out.println("Could not write to file");
+            System.exit(1);
         }
     }
 }
