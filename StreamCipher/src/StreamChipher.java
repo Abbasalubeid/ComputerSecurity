@@ -15,12 +15,13 @@ public class StreamChipher {
     private static byte[] getBytesFromFile(String file){
         Path inputFilePath = Path.of(file);
         if (!Files.exists(inputFilePath)) {
-            System.out.println("Input file does not exist.");
+            System.out.println("Input file does not exist");
             System.exit(1);
         }
 
         try {
             FileInputStream input = new FileInputStream(file);
+            input.close();
             return input.readAllBytes();
         } catch (Exception e) {
             System.out.println("Could not read file");
@@ -36,6 +37,7 @@ public class StreamChipher {
         try {
             FileOutputStream output = new FileOutputStream(file);
             output.write(bytesToWrite);
+            output.close();
         } catch (Exception e) {
             System.out.println("Could not write to file");
             System.exit(1);
