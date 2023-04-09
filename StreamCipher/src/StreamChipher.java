@@ -1,7 +1,6 @@
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Random;
 
 public class StreamChipher {
     public static void main(String[] args) {
@@ -57,10 +56,10 @@ public class StreamChipher {
 
     private static byte[] cipher(int seed, byte[] plaintext){
         try {
-            Random rnd = new Random(seed);
+            MyRandom rnd = new MyRandom(seed);
             byte[] cipherBytes = new byte[plaintext.length];
             for (int i = 0; i < plaintext.length; i++) {
-                cipherBytes[i] = (byte) (plaintext[i] ^ rnd.nextInt(256));
+                cipherBytes[i] = (byte) (plaintext[i] ^ rnd.next(8));
             }
             return cipherBytes;
         } catch (Exception e) {
