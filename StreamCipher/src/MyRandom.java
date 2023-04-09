@@ -12,6 +12,11 @@ public class MyRandom  extends Random {
     }
 
     public MyRandom(long seed) {
+        setSeed(seed);
+    }
+
+    @Override
+    public void setSeed(long seed){
         this.seed = seed;
     }
 
@@ -22,11 +27,6 @@ public class MyRandom  extends Random {
         int maskedInt = (int) (nextRandom & mask); // mask to only include the specified number of bits 
         seed = maskedInt; 
         return maskedInt;
-    }
-
-    @Override
-    public void setSeed(long seed){
-        this.seed = seed;
     }
     
 }
