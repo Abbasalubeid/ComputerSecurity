@@ -10,13 +10,9 @@ public class RC4 {
             System.err.println("Invalid number of arguments, args: <key> <infile> <outfile>");
             System.exit(1);
         }
-        int key = 0;
-        try {
-        key = Integer.parseInt(args[0]);
-        } catch (Exception e) {
-            System.err.println("Invalid key");
-            System.exit(1);
-        }
+
+        byte[] key = args[0].getBytes();
+
         byte[] m = getBytesFromFile(args[1]);
         byte [] c = cipher(key, m);
         writeBytesToFile(args[2], c);
@@ -56,9 +52,9 @@ public class RC4 {
         }
     }
 
-    private static byte[] cipher(int seed, byte[] plaintext){
+    private static byte[] cipher(byte[] key, byte[] plaintext){
         try {
-            MyRandom rnd = new MyRandom(seed);
+            RC4Random rnd = new RC4Random(key);
             byte[] cipherBytes = new byte[plaintext.length];
             for (int i = 0; i < plaintext.length; i++) {
                 cipherBytes[i] = (byte) (plaintext[i] ^ rnd.next(8));
