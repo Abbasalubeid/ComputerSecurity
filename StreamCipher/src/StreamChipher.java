@@ -11,6 +11,7 @@ public class StreamChipher {
         int key = 0;
         try {
         key = Integer.parseInt(args[0]);
+
         } catch (Exception e) {
             System.err.println("Invalid key");
             System.exit(1);
@@ -42,7 +43,7 @@ public class StreamChipher {
     private static void writeBytesToFile(String file, byte[] bytesToWrite){
         Path outputFilePath = Path.of(file);
         if (Files.exists(outputFilePath)) {
-            System.err.println("Warning: output file already exists and will be overwritten");
+            System.err.println("Warning: output file already exists and can be overwritten");
         }
         try {
             FileOutputStream output = new FileOutputStream(file);
@@ -63,7 +64,7 @@ public class StreamChipher {
             }
             return cipherBytes;
         } catch (Exception e) {
-            System.err.println("Encryption fail " + e);
+            System.err.println("Encryption fail: " + e);
             return null;
         }
 
