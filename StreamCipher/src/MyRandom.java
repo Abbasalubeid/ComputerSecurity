@@ -6,12 +6,17 @@ public class MyRandom  extends Random {
     private static final long a = 17; //Primitive root to m, calculated with Mathematica
     private long seed;
 
-    public MyRandom() {
+    public MyRandom() throws IllegalArgumentException{
         this(System.nanoTime());
     }
 
-    public MyRandom(long seed) {
-        setSeed(seed);
+    public MyRandom(long seed) throws IllegalArgumentException{
+        // seed = 0 should be avoided according to D. H. Lehmers PRNG
+        if (seed == 0){
+            throw new IllegalArgumentException("The seed cannot be zero");
+        }
+        else
+            setSeed(seed);
     }
 
     @Override
