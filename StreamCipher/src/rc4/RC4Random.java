@@ -19,6 +19,7 @@ public class RC4Random extends Random {
         }
     }
 
+    @Override
     public int next(int bits) {
         i = (i + 1) % 256;
         j = (j + s[i]) % 256;
