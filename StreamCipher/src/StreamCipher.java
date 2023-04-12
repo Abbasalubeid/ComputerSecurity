@@ -2,7 +2,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class StreamChipher {
+public class StreamCipher {
     public static void main(String[] args) {
         if (args.length != 3) {
             System.err.println("Invalid number of arguments, args: <key> <infile> <outfile>");
