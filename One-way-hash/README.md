@@ -1,18 +1,21 @@
-## Getting Started
+## CollisionResistance
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+This program generates random strings and computes their hash values until a collision is found with the hash of the provided messages. To run the program, follow these steps:
 
-## Folder Structure
+1. Open a terminal or command prompt.
+2. Navigate to the directory where the `CollisionResistance.java` file is saved.
+3. Compile the program by entering the following command: `javac CollisionResistance.java`
+4. Run the program by entering the following command: `java CollisionResistance`
+5. The program will output the messages and the number of trials required to find a collision for each message.
+6. The program does not require any arguments to be passed.
 
-The workspace contains two folders by default, where:
+## BitCounter
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+This program compares two MD5 and two SHA-256 hash values and counts the number of bits that are the same between each pair of hashes. To run the program, follow these steps:
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
-
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+1. Open a terminal or command prompt.
+2. Navigate to the directory where the `BitCounter.java` file is saved.
+3. Compile the program by entering the following command: `javac BitCounter.java`
+4. Run the program by entering the following command, along with the four hash values as arguments: `java BitCounter <MD5 Hash 1> <MD5 Hash 2> <SHA-256 Hash 1> <SHA-256 Hash 2>`
+5. The program will output the number of bits that are the same between each pair of hashes.
+6. Make sure to replace `<MD5 Hash 1>`, `<MD5 Hash 2>`, `<SHA-256 Hash 1>`, and `<SHA-256 Hash 2>` with the actual hash values you want to compare when running the program.
