@@ -1,6 +1,8 @@
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.math.BigInteger;
+import java.util.Random;
 
 public class StreamCipher {
     public static void main(String[] args) {
@@ -8,18 +10,16 @@ public class StreamCipher {
             System.err.println("Invalid number of arguments, args: <key> <infile> <outfile>");
             System.exit(1);
         }
-        int key = 0;
+        BigInteger key;
         try {
-        key = Integer.parseInt(args[0]);
-
+            key = new BigInteger(args[0]);
+            byte[] m = getBytesFromFile(args[1]);
+            byte [] c = cipher(key, m);
+            writeBytesToFile(args[2], c);
         } catch (Exception e) {
             System.err.println("Invalid key");
             System.exit(1);
         }
-        byte[] m = getBytesFromFile(args[1]);
-        byte [] c = cipher(key, m);
-        writeBytesToFile(args[2], c);
-
     }
 
     private static byte[] getBytesFromFile(String file){
@@ -43,7 +43,7 @@ public class StreamCipher {
     private static void writeBytesToFile(String file, byte[] bytesToWrite){
         Path outputFilePath = Path.of(file);
         if (Files.exists(outputFilePath)) {
-            System.err.println("Warning: output file already exists and can be overwritten");
+            System.err.println("Warning: output file already exists and will be overwritten");
         }
         try {
             FileOutputStream output = new FileOutputStream(file);
@@ -55,20 +55,17 @@ public class StreamCipher {
         }
     }
 
-    private static byte[] cipher(int seed, byte[] plaintext){
+    private static byte[] cipher(BigInteger seed, byte[] plaintext){
         try {
-            MyRandom rnd = new MyRandom(seed);
+            Random rnd = new Random(seed.mod(BigInteger.valueOf(Long.MAX_VALUE)).longValue());
             byte[] cipherBytes = new byte[plaintext.length];
             for (int i = 0; i < plaintext.length; i++) {
-                cipherBytes[i] = (byte) (plaintext[i] ^ rnd.next(8));
+                cipherBytes[i] = (byte) (plaintext[i] ^ rnd.nextInt(256));
             }
             return cipherBytes;
         } catch (Exception e) {
-            System.err.println("Encryption fail: " + e);
+            System.err.println("Encryption fail " + e);
             return null;
         }
-
-
-        
     }
 }
