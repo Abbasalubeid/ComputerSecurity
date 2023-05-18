@@ -1,12 +1,11 @@
-package rc4;
 import java.util.Random;
 
-public class RC4Random extends Random {
+public class MyRandom extends Random {
     private int[] s = new int[256];
     private int i = 0;
     private int j = 0;
 
-    public RC4Random(byte[] key) {
+    public MyRandom(byte[] key) {
         for (int k = 0; k < 256; k++) {
             s[k] = k;
         }
@@ -19,7 +18,6 @@ public class RC4Random extends Random {
         }
     }
 
-    @Override
     public int next(int bits) {
         i = (i + 1) % 256;
         j = (j + s[i]) % 256;
@@ -29,6 +27,4 @@ public class RC4Random extends Random {
         int k = s[(s[i] + s[j]) % 256];
         return k & ((1 << bits) - 1);
     }
-
-
 }
