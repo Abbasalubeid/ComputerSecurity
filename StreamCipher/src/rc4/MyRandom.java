@@ -11,7 +11,7 @@ public class MyRandom extends Random {
         }
         int j = 0;
         for (int i = 0; i < 256; i++) {
-            j = (j + s[i] + key[i % key.length]) % 256;
+            j = (j + s[i] + (key[i % key.length] & 0xFF)) & 0xFF;
             int temp = s[i];
             s[i] = s[j];
             s[j] = temp;
@@ -19,12 +19,12 @@ public class MyRandom extends Random {
     }
 
     public int next(int bits) {
-        i = (i + 1) % 256;
-        j = (j + s[i]) % 256;
+        i = (i + 1) & 0xFF;
+        j = (j + s[i]) & 0xFF;
         int temp = s[i];
         s[i] = s[j];
         s[j] = temp;
-        int k = s[(s[i] + s[j]) % 256];
+        int k = s[(s[i] + s[j]) & 0xFF];
         return k & ((1 << bits) - 1);
     }
 }
