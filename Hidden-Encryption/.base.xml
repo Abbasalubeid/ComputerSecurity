@@ -1,0 +1,21 @@
+<Submission>
+  <!--Hidden Encryption Challenge-->
+  <Course>
+    <ID>39072</ID>
+    <Name>IV1013 VT23 Introduction to Computer Security</Name>
+  </Course>
+  <Date>Thu May  4 22:38:00 2023</Date>
+  <Student>
+    <Mail>alubeid@kth.se</Mail>
+    <Name>Abbas Alubeid</Name>
+    <ID>111096</ID>
+  </Student>
+  <Assignment>
+    <ID>241250</ID>
+    <Name>Hidden Encryption Challenge</Name>
+  </Assignment>
+  <Path>submissions/alubeid-111096</Path>
+  <Files>
+    <Type>none</Type>
+  </Files>
+</Submission>
