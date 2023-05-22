@@ -26,7 +26,7 @@ public class BlobDecryptor {
         byte[] decryptedFile = cipher.doFinal(dataFile);
 
         // Search for the hidden data
-        int dataStart = -1
+        int dataStart = -1;
         int dataEnd = -1;
         for (int i = 0; i <= decryptedFile.length - hashedKey.length; i++) {
             byte[] slice = Arrays.copyOfRange(decryptedFile, i, i + hashedKey.length);
