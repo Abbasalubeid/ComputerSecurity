@@ -39,9 +39,10 @@ public class Hiddec {
         byte[] hashedKey = md5.digest(keyBytes);
 
         // Load the data file
-        byte[] inputBytes;
+        byte[] inputBytes = null;
         try {
             inputBytes = Files.readAllBytes(input);
+            System.out.println("hej");
         } catch (Exception e) {
             System.out.println("Unable to read input file.");
             System.exit(1);
