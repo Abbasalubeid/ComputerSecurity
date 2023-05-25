@@ -25,9 +25,18 @@ public class Hiddec {
             }
         }
 
-        // Check arguments
         if (keyHex == null || input == null || output == null) {
             System.out.println("Missing required argument.");
+            System.exit(1);
+        }
+
+        if (keyHex.length() != 32 || (ctrHex != null && ctrHex.length() != 32)) {
+            System.out.println("Key and CTR must be 32 hexadecimal digits (16 bytes).");
+            System.exit(1);
+        }
+
+        if (!Files.exists(input) || !Files.isRegularFile(input)) {
+            System.out.println("Input file does not exist or is not a file.");
             System.exit(1);
         }
 
@@ -67,7 +76,6 @@ public class Hiddec {
                 if (i == inputBytes.length - keyWithAES.length) {
                     System.out.println("No matching blob found in the input.");
                     System.exit(1);
-                    return;
                 }
             }
 
@@ -78,13 +86,12 @@ public class Hiddec {
         }
 
         // Decrypt the data file
-        byte[] decryptedFile;
+        byte[] decryptedFile = null;
         try {
             decryptedFile = cipher.doFinal(inputBytes);
         } catch (Exception e) {
             System.out.println("Decryption failed.");
             System.exit(1);
-            return;
         }
 
         // Search for the hidden data
@@ -104,7 +111,6 @@ public class Hiddec {
         if (dataStart == -1 || dataEnd == -1) {
             System.out.println("Could not find the hidden data in the decrypted file.");
             System.exit(1);
-            return;
         }
 
         // Extract the data
@@ -118,13 +124,19 @@ public class Hiddec {
 
         // Compare the two hashes
         if (Arrays.equals(extractedDataHash, calculatedDataHash)) {
-            Files.write(output, data);
+            try {
+                Files.write(output, data);
+            } catch (Exception e) {
+                System.out.println("Could not write to output file.");
+                System.exit(1);
+            }
         } else {
             System.out.println("Data verification failed. The data is not valid, H´' != H(Data)");
             System.exit(1);
         }
     }
 
+    // Code from https://www.geeksforgeeks.org/java-program-to-convert-hex-string-to-byte-array/
     public static byte[] hexStringToByteArray(String s) {
         byte[] b = new byte[s.length() / 2];
         for (int i = 0; i < b.length; i++) {
