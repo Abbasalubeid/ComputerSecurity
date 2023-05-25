@@ -40,21 +40,48 @@ public class Hidenc {
             System.exit(1);
         }
 
-        // Check length of key and ctr
         if (keyHex.length() != 32 || (ctrHex != null && ctrHex.length() != 32)) {
             System.out.println("Key and CTR must be 32 hexadecimal digits (16 bytes).");
             System.exit(1);
         }
 
-        // Check size
         if (size != -1 && (size <= 0 || size % 16 != 0)) {
             System.out.println("Size must be a positive multiple of 16.");
             System.exit(1);
         }
 
-        // Check that only one of --template or --size is specified
         if (template != null && size != -1) {
             System.out.println("Either --template or --size must be specified, not both.");
+            System.exit(1);
+        }
+
+        if (!Files.exists(input) || !Files.isRegularFile(input)) {
+            System.out.println("Input file does not exist or is not a file.");
+            System.exit(1);
+        }
+
+        byte[] container = null;
+        if (template != null) {
+            if (!Files.exists(template) || !Files.isRegularFile(template)) {
+                System.out.println("Template file does not exist or is not a file.");
+                System.exit(1);
+            }
+            try {
+                container = Files.readAllBytes(template);
+                if (ctrHex == null && (container.length % 16) != 0){
+                    System.out.println("Template file size has to be a multiple of 16 in bytes");
+                    System.exit(1);
+                }
+
+            } catch (Exception e) {
+                System.out.println("Error reading template file.");
+                System.exit(1);
+            }
+        } else if (size != -1) {
+            container = new byte[size];
+            new Random().nextBytes(container);
+        } else {
+            System.out.println("Either --template or --size must be specified.");
             System.exit(1);
         }
 
@@ -70,18 +97,13 @@ public class Hidenc {
         try {
             data = Files.readAllBytes(input);
         } catch (Exception e) {
-            System.out.println("Error reading input file: " + e.getMessage());
+            System.out.println("Error reading input file");
             System.exit(1);
         }
 
         // Calculate the hash of the data
         byte[] dataHash = md5.digest(data);
 
-        // Check if the blob will fit in the container
-        if (size != -1 && size < 2*hashedKey.length + data.length + dataHash.length) {
-            System.out.println("Size is not big enough to contain the blob.");
-            System.exit(1);
-        }
 
         // Create the blob and fill it with the right content in the right order
         byte[] blob = new byte[2*hashedKey.length + data.length + dataHash.length];
@@ -90,61 +112,57 @@ public class Hidenc {
         System.arraycopy(hashedKey, 0, blob, hashedKey.length + data.length, hashedKey.length);
         System.arraycopy(dataHash, 0, blob, 2*hashedKey.length + data.length, dataHash.length);
 
-        // Initialize the cipher
+        // Check if the blob will fit in the container
+        if (container.length < 2*hashedKey.length + data.length + dataHash.length) {
+            if (template != null) 
+                System.out.println("Template file is not big enough to contain the blob.");
+            else
+                System.out.println("Size is not big enough to contain the blob.");
+                
+            System.exit(1);
+        }
+
+        if (offset == -1) {
+            offset = new Random().nextInt(container.length - blob.length);
+        }
+
+        byte[] encryptedBlob = null;
         SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
         Cipher cipher = null;
         if (ctrHex != null) {
             IvParameterSpec ivSpec = new IvParameterSpec(hexStringToByteArray(ctrHex));
             cipher = Cipher.getInstance("AES/CTR/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+            encryptedBlob = cipher.doFinal(blob);
+            System.arraycopy(encryptedBlob, 0, container, offset, encryptedBlob.length);
         } else {
             cipher = Cipher.getInstance("AES/ECB/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+            System.arraycopy(blob, 0, container, offset, blob.length);
         }
 
-        // Encrypt the blob
-        byte[] encryptedBlob = cipher.doFinal(blob);
 
-        // Create a container file
-        byte[] container = null;
-        if (template != null) {
-            try {
-                container = Files.readAllBytes(template);
-            } catch (Exception e) {
-                System.out.println("Error reading template file: " + e.getMessage());
-                System.exit(1);
-            }
-        } else if (size != -1) {
-            container = new byte[size];
-            new Random().nextBytes(container);
-        } else {
-            System.out.println("Either --template or --size must be specified.");
-            System.exit(1);
-        }
-
-        if (offset == -1) {
-            offset = new Random().nextInt(container.length - encryptedBlob.length);
-        }
-
-        // Place the blob at the offset
-        System.arraycopy(encryptedBlob, 0, container, offset, encryptedBlob.length);
+        // Encrypt the whole container if it is ECB
+        if(ctrHex == null)
+            container = cipher.doFinal(container);
 
         // Save the container
         try {
             Files.write(output, container);
         } catch (Exception e) {
-            System.out.println("Error writing output file: " + e.getMessage());
+            System.out.println("Error writing output file.");
             System.exit(1);
         }
     }
 
-    private static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                                  + Character.digit(s.charAt(i+1), 16));
+    // Code from https://www.geeksforgeeks.org/java-program-to-convert-hex-string-to-byte-array/
+    public static byte[] hexStringToByteArray(String s) {
+        byte[] b = new byte[s.length() / 2];
+        for (int i = 0; i < b.length; i++) {
+            int index = i * 2;
+            int v = Integer.parseInt(s.substring(index, index + 2), 16);
+            b[i] = (byte) v;
         }
-        return data;
+        return b;
     }
 }
