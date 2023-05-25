@@ -28,7 +28,7 @@ public class Hiddec {
         // Check arguments
         if (keyHex == null || input == null || output == null) {
             System.out.println("Missing required argument.");
-            return;
+            System.exit(1);
         }
 
         // Convert hexadecimal strings to byte arrays
@@ -39,7 +39,13 @@ public class Hiddec {
         byte[] hashedKey = md5.digest(keyBytes);
 
         // Load the data file
-        byte[] inputBytes = Files.readAllBytes(input);
+        byte[] inputBytes;
+        try {
+            inputBytes = Files.readAllBytes(input);
+        } catch (Exception e) {
+            System.out.println("Unable to read input file.");
+            System.exit(1);
+        }
 
         // Initialize the cipher
         SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
@@ -51,12 +57,20 @@ public class Hiddec {
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
             byte[] keyWithAES = cipher.doFinal(hashedKey);
 
+            // Find where the blob starts and make it the start of the input byte array
             for (int i = 0; i <= inputBytes.length - keyWithAES.length; i++) {
                 byte[] slice = Arrays.copyOfRange(inputBytes, i, i + keyWithAES.length);
                 if (Arrays.equals(slice, keyWithAES)) {
                     inputBytes = Arrays.copyOfRange(inputBytes, i, i + inputBytes.length);
+                    break;
+                }
+                if (i == inputBytes.length - keyWithAES.length) {
+                    System.out.println("No matching blob found in the input.");
+                    System.exit(1);
+                    return;
                 }
             }
+
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
         } else {
             cipher = Cipher.getInstance("AES/ECB/NoPadding");
@@ -64,10 +78,15 @@ public class Hiddec {
         }
 
         // Decrypt the data file
-        byte[] decryptedFile = cipher.doFinal(inputBytes);
+        byte[] decryptedFile;
+        try {
+            decryptedFile = cipher.doFinal(inputBytes);
+        } catch (Exception e) {
+            System.out.println("Decryption failed.");
+            System.exit(1);
+            return;
+        }
 
-        Files.write(Paths.get("task3Decrypted.data"), decryptedFile);
-        
         // Search for the hidden data
         int dataStart = -1;
         int dataEnd = -1;
@@ -83,7 +102,8 @@ public class Hiddec {
             }
         }
         if (dataStart == -1 || dataEnd == -1) {
-            System.out.println("Could not find the hidden data in the data file.");
+            System.out.println("Could not find the hidden data in the decrypted file.");
+            System.exit(1);
             return;
         }
 
@@ -101,6 +121,7 @@ public class Hiddec {
             Files.write(output, data);
         } else {
             System.out.println("Data verification failed. The data is not valid, H´' != H(Data)");
+            System.exit(1);
         }
     }
 
