@@ -27,9 +27,9 @@ public class MyRandom  extends Random {
     @Override
     public int next(int bits){
         long nextRandom = (((a * seed)) % m);
+        seed = nextRandom;
         int mask = (1 << bits) - 1; // create a bit mask with the specified number of bits
         int maskedInt = (int) (nextRandom & mask); // mask to only include the specified number of bits 
-        seed = maskedInt; 
         return maskedInt;
     }
 }
