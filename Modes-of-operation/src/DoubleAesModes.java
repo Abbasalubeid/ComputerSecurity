@@ -190,4 +190,69 @@ public class DoubleAesModes {
         newArray[newArray.length - 1] = b;
         return newArray;
     }       
+    
+    public byte[] ctrEncrypt(byte[] plaintext, byte[] iv) throws Exception {
+        // Initialize a counter with the value of the IV.
+        BigInteger counter = new BigInteger(1, iv);
+
+        // Create an array to hold the ciphertext.
+        byte[] ciphertext = new byte[plaintext.length];
+    
+        // For each block of plaintext,
+        for (int i = 0; i < plaintext.length; i += BLOCK_SIZE) {
+            // Convert the counter to a byte array.
+            byte[] counterBytes = counter.toByteArray();
+
+            // Create a block of bytes from the counter.
+            byte[] counterBlock = new byte[BLOCK_SIZE];
+            System.arraycopy(counterBytes, 0, counterBlock, BLOCK_SIZE - counterBytes.length, counterBytes.length);
+
+            // Encrypt the counter block using double AES.
+            byte[] encryptedCounter = doubleAesEncrypt(counterBlock);
+    
+            // Take the current block of plaintext.
+            byte[] plaintextBlock = Arrays.copyOfRange(plaintext, i, Math.min(i + BLOCK_SIZE, plaintext.length));
+
+            // XOR the encrypted counter with the plaintext block.
+            byte[] ciphertextBlock = xor(encryptedCounter, plaintextBlock);
+
+            // Add the ciphertext block to the ciphertext array.
+            System.arraycopy(ciphertextBlock, 0, ciphertext, i, plaintextBlock.length);
+    
+            // Increment the counter for the next iteration.
+            counter = counter.add(BigInteger.ONE);
+        }
+    
+        // Return the final ciphertext.
+        return ciphertext;
+    }
+
+    public byte[] ctrDecrypt(byte[] ciphertext, byte[] iv) throws Exception {
+        // Initialization of CTR mode decryption is identical to encryption.
+        return ctrEncrypt(ciphertext, iv);
+    }
+    public static void main(String[] args) throws Exception {
+        byte[] key1 = "0123456789abcdef".getBytes(); // 16 bytes
+        byte[] key2 = "fedcba9876543210".getBytes(); // 16 bytes
+        byte[] iv = "abcdef0123456789".getBytes(); // 16 bytes
+        DoubleAesModes doubleAesModes = new DoubleAesModes(key1, key2);
+
+        String plaintext = "This is a test message.";
+        byte[] plaintextBytes = plaintext.getBytes();
+
+        byte[] ciphertextCbc = doubleAesModes.cbcEncrypt(plaintextBytes, iv);
+        System.out.println("CBC ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCbc));
+        byte[] decryptedCbc = doubleAesModes.cbcDecrypt(ciphertextCbc, iv);
+        System.out.println("CBC decrypted: " + new String(decryptedCbc));
+
+        byte[] ciphertextCfb = doubleAesModes.cfbEncrypt(plaintextBytes, iv);
+        System.out.println("CFB ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCfb));
+        byte[] decryptedCfb = doubleAesModes.cfbDecrypt(ciphertextCfb, iv);
+        System.out.println("CFB decrypted: " + new String(decryptedCfb));
+
+        byte[] ciphertextCtr = doubleAesModes.ctrEncrypt(plaintextBytes, iv);
+        System.out.println("CTR ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCtr));
+        byte[] decryptedCtr = doubleAesModes.ctrDecrypt(ciphertextCtr, iv);
+        System.out.println("CTR decrypted: " + new String(decryptedCtr));
+    }
 }
