@@ -107,7 +107,6 @@ public class DoubleAesModes {
         return ciphertext;
     }
 
-
     public byte[] cbcDecrypt(byte[] ciphertext, byte[] iv) throws Exception {
         byte[] previousBlock = iv;
         byte[] plaintext = new byte[ciphertext.length];
@@ -128,4 +127,67 @@ public class DoubleAesModes {
         // Remove the padding from the plaintext and return the result.
         return unpad(plaintext);
     }
+
+    public byte[] cfbEncrypt(byte[] plaintext, byte[] iv) throws Exception {
+        // Apply PKCS#7 padding to the plaintext.
+        byte[] paddedPlaintext = pad(plaintext);
+        
+        byte[] ciphertext = new byte[paddedPlaintext.length];
+    
+        // Initialize the shift register with the IV.
+        byte[] shiftRegister = iv;
+    
+        // For each byte of plaintext,
+        for (int i = 0; i < paddedPlaintext.length; i++) {
+            // Encrypt the shift register using double AES.
+            byte[] encryptedBlock = doubleAesEncrypt(shiftRegister);
+    
+            // XOR the first byte of the encrypted block with the current plaintext byte.
+            byte ciphertextByte = (byte) (encryptedBlock[0] ^ paddedPlaintext[i]);
+    
+            // Add the ciphertext byte to the ciphertext array.
+            ciphertext[i] = ciphertextByte;
+    
+            // Update the shift register: discard the first byte and append the ciphertext byte.
+            shiftRegister = Arrays.copyOfRange(shiftRegister, 1, shiftRegister.length);
+            shiftRegister = appendByte(shiftRegister, ciphertextByte);
+        }
+    
+        // Return the final ciphertext.
+        return ciphertext;
+    }
+    
+    public byte[] cfbDecrypt(byte[] ciphertext, byte[] iv) throws Exception {
+        byte[] plaintext = new byte[ciphertext.length];
+    
+        // Initialize the shift register with the IV.
+        byte[] shiftRegister = iv;
+    
+        // For each byte of ciphertext,
+        for (int i = 0; i < ciphertext.length; i++) {
+            // Encrypt the shift register using double AES.
+            byte[] encryptedBlock = doubleAesEncrypt(shiftRegister);
+    
+            // XOR the first byte of the encrypted block with the current ciphertext byte.
+            byte plaintextByte = (byte) (encryptedBlock[0] ^ ciphertext[i]);
+    
+            // Add the plaintext byte to the plaintext array.
+            plaintext[i] = plaintextByte;
+    
+            // Update the shift register: discard the first byte and append the current ciphertext byte.
+            shiftRegister = Arrays.copyOfRange(shiftRegister, 1, shiftRegister.length);
+            shiftRegister = appendByte(shiftRegister, ciphertext[i]);
+        }
+    
+        // Unpad the plaintext before returning it.
+        return unpad(plaintext);
+    }
+
+    // A helper function to append a byte to a byte array.
+    public byte[] appendByte(byte[] array, byte b) {
+        byte[] newArray = new byte[array.length + 1];
+        System.arraycopy(array, 0, newArray, 0, array.length);
+        newArray[newArray.length - 1] = b;
+        return newArray;
+    }       
 }
