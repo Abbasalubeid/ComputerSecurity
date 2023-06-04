@@ -1,6 +1,7 @@
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.*;
 
 
@@ -12,10 +13,14 @@ public class DoubleAesModes {
 
     private final SecretKeySpec key1;
     private final SecretKeySpec key2;
+    private final byte[] iv;
 
     public DoubleAesModes(byte[] key1Bytes, byte[] key2Bytes) {
         this.key1 = new SecretKeySpec(key1Bytes, AES);
         this.key2 = new SecretKeySpec(key2Bytes, AES);
+        SecureRandom random = new SecureRandom();
+        this.iv = new byte[BLOCK_SIZE];
+        random.nextBytes(this.iv);
     }
 
     // Bitwise XOR on two byte arrays.
@@ -76,11 +81,11 @@ public class DoubleAesModes {
         return Arrays.copyOf(input, input.length - padLength);
     }
 
-    public byte[] cbcEncrypt(byte[] plaintext, byte[] iv) throws Exception {
+    public byte[] cbcEncrypt(byte[] plaintext) throws Exception {
         // Apply PKCS#7 padding to the plaintext.
         byte[] paddedPlaintext = pad(plaintext);
 
-        byte[] previousBlock = iv;
+        byte[] previousBlock = this.iv;
 
         // Create an array to hold the ciphertext.
         byte[] ciphertext = new byte[paddedPlaintext.length];
@@ -107,8 +112,8 @@ public class DoubleAesModes {
         return ciphertext;
     }
 
-    public byte[] cbcDecrypt(byte[] ciphertext, byte[] iv) throws Exception {
-        byte[] previousBlock = iv;
+    public byte[] cbcDecrypt(byte[] ciphertext) throws Exception {
+        byte[] previousBlock = this.iv;
         byte[] plaintext = new byte[ciphertext.length];
 
         for (int i = 0; i < ciphertext.length; i += BLOCK_SIZE) {
@@ -128,13 +133,12 @@ public class DoubleAesModes {
         return unpad(plaintext);
     }
 
-    // A general function for both encryption and decryption in Cipher Feedback (CFB) mode.
-    public byte[] cfbMode(byte[] input, byte[] iv, boolean isEncrypt) throws Exception {
+    public byte[] cfbMode(byte[] input, boolean isEncrypt) throws Exception {
         // Prepare an array for the output (either ciphertext or plaintext).
         byte[] output = new byte[input.length];
 
         // Initialize the shift register with the Initialization Vector (IV).
-        byte[] shiftRegister = iv;
+        byte[] shiftRegister = this.iv;
 
         // Process each byte of the input (either plaintext for encryption, or ciphertext for decryption).
         for (int i = 0; i < input.length; i++) {
@@ -157,17 +161,16 @@ public class DoubleAesModes {
         return output;
     }
 
-    // Function to perform encryption in Cipher Feedback (CFB) mode.
-    public byte[] cfbEncrypt(byte[] plaintext, byte[] iv) throws Exception {
+    public byte[] cfbEncrypt(byte[] plaintext) throws Exception {
         // Padding the plaintext to make its length a multiple of the block size.
         byte[] paddedPlaintext = pad(plaintext);
 
         // Return the resulting ciphertext.
-        return cfbMode(paddedPlaintext, iv, true);
+        return cfbMode(paddedPlaintext, true);
     }
 
-    public byte[] cfbDecrypt(byte[] ciphertext, byte[] iv) throws Exception {
-        byte[] plaintext = cfbMode(ciphertext, iv, false);
+    public byte[] cfbDecrypt(byte[] ciphertext) throws Exception {
+        byte[] plaintext = cfbMode(ciphertext, false);
 
         // Remove the padding from the decrypted plaintext.
         return unpad(plaintext);
@@ -181,10 +184,10 @@ public class DoubleAesModes {
         return newArray;
     }       
     
-    public byte[] ctrEncrypt(byte[] plaintext, byte[] iv) throws Exception {
+    public byte[] ctrEncrypt(byte[] plaintext) throws Exception {
         // Initialize a counter with the value of the IV.
-        BigInteger counter = new BigInteger(1, iv);
-
+        BigInteger counter = new BigInteger(1, this.iv);
+    
         // Create an array to hold the ciphertext.
         byte[] ciphertext = new byte[plaintext.length];
     
@@ -192,20 +195,27 @@ public class DoubleAesModes {
         for (int i = 0; i < plaintext.length; i += BLOCK_SIZE) {
             // Convert the counter to a byte array.
             byte[] counterBytes = counter.toByteArray();
-
-            // Create a block of bytes from the counter.
-            byte[] counterBlock = new byte[BLOCK_SIZE];
-            System.arraycopy(counterBytes, 0, counterBlock, BLOCK_SIZE - counterBytes.length, counterBytes.length);
-
+    
+            // Ensure the counterBytes is of length BLOCK_SIZE
+            if (counterBytes.length < BLOCK_SIZE) {
+                // Pad counterBytes with leading zeros if it's shorter
+                byte[] temp = new byte[BLOCK_SIZE];
+                System.arraycopy(counterBytes, 0, temp, BLOCK_SIZE - counterBytes.length, counterBytes.length);
+                counterBytes = temp;
+            } else if (counterBytes.length > BLOCK_SIZE) {
+                // Trim counterBytes if it's longer
+                counterBytes = Arrays.copyOfRange(counterBytes, counterBytes.length - BLOCK_SIZE, counterBytes.length);
+            }
+    
             // Encrypt the counter block using double AES.
-            byte[] encryptedCounter = doubleAesEncrypt(counterBlock);
+            byte[] encryptedCounter = doubleAesEncrypt(counterBytes);
     
             // Take the current block of plaintext.
             byte[] plaintextBlock = Arrays.copyOfRange(plaintext, i, Math.min(i + BLOCK_SIZE, plaintext.length));
-
+    
             // XOR the encrypted counter with the plaintext block.
             byte[] ciphertextBlock = xor(encryptedCounter, plaintextBlock);
-
+    
             // Add the ciphertext block to the ciphertext array.
             System.arraycopy(ciphertextBlock, 0, ciphertext, i, plaintextBlock.length);
     
@@ -217,32 +227,31 @@ public class DoubleAesModes {
         return ciphertext;
     }
 
-    public byte[] ctrDecrypt(byte[] ciphertext, byte[] iv) throws Exception {
+    public byte[] ctrDecrypt(byte[] ciphertext) throws Exception {
         // Initialization of CTR mode decryption is identical to encryption.
-        return ctrEncrypt(ciphertext, iv);
+        return ctrEncrypt(ciphertext);
     }
     public static void main(String[] args) throws Exception {
         byte[] key1 = "0123456789abcdef".getBytes(); // 16 bytes
         byte[] key2 = "fedcba9876543210".getBytes(); // 16 bytes
-        byte[] iv = "abcdef0123456789".getBytes(); // 16 bytes
         DoubleAesModes doubleAesModes = new DoubleAesModes(key1, key2);
 
         String plaintext = "This is a test message.";
         byte[] plaintextBytes = plaintext.getBytes();
 
-        byte[] ciphertextCbc = doubleAesModes.cbcEncrypt(plaintextBytes, iv);
+        byte[] ciphertextCbc = doubleAesModes.cbcEncrypt(plaintextBytes);
         System.out.println("CBC ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCbc));
-        byte[] decryptedCbc = doubleAesModes.cbcDecrypt(ciphertextCbc, iv);
+        byte[] decryptedCbc = doubleAesModes.cbcDecrypt(ciphertextCbc);
         System.out.println("CBC decrypted: " + new String(decryptedCbc));
 
-        byte[] ciphertextCfb = doubleAesModes.cfbEncrypt(plaintextBytes, iv);
+        byte[] ciphertextCfb = doubleAesModes.cfbEncrypt(plaintextBytes);
         System.out.println("CFB ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCfb));
-        byte[] decryptedCfb = doubleAesModes.cfbDecrypt(ciphertextCfb, iv);
+        byte[] decryptedCfb = doubleAesModes.cfbDecrypt(ciphertextCfb);
         System.out.println("CFB decrypted: " + new String(decryptedCfb));
 
-        byte[] ciphertextCtr = doubleAesModes.ctrEncrypt(plaintextBytes, iv);
+        byte[] ciphertextCtr = doubleAesModes.ctrEncrypt(plaintextBytes);
         System.out.println("CTR ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCtr));
-        byte[] decryptedCtr = doubleAesModes.ctrDecrypt(ciphertextCtr, iv);
+        byte[] decryptedCtr = doubleAesModes.ctrDecrypt(ciphertextCtr);
         System.out.println("CTR decrypted: " + new String(decryptedCtr));
     }
 }
