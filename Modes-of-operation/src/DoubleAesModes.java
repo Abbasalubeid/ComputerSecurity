@@ -128,58 +128,48 @@ public class DoubleAesModes {
         return unpad(plaintext);
     }
 
-    public byte[] cfbEncrypt(byte[] plaintext, byte[] iv) throws Exception {
-        // Apply PKCS#7 padding to the plaintext.
-        byte[] paddedPlaintext = pad(plaintext);
-        
-        byte[] ciphertext = new byte[paddedPlaintext.length];
-    
-        // Initialize the shift register with the IV.
+    // A general function for both encryption and decryption in Cipher Feedback (CFB) mode.
+    public byte[] cfbMode(byte[] input, byte[] iv, boolean isEncrypt) throws Exception {
+        // Prepare an array for the output (either ciphertext or plaintext).
+        byte[] output = new byte[input.length];
+
+        // Initialize the shift register with the Initialization Vector (IV).
         byte[] shiftRegister = iv;
-    
-        // For each byte of plaintext,
-        for (int i = 0; i < paddedPlaintext.length; i++) {
-            // Encrypt the shift register using double AES.
+
+        // Process each byte of the input (either plaintext for encryption, or ciphertext for decryption).
+        for (int i = 0; i < input.length; i++) {
+            // Encrypt the current contents of the shift register using double AES.
             byte[] encryptedBlock = doubleAesEncrypt(shiftRegister);
-    
-            // XOR the first byte of the encrypted block with the current plaintext byte.
-            byte ciphertextByte = (byte) (encryptedBlock[0] ^ paddedPlaintext[i]);
-    
-            // Add the ciphertext byte to the ciphertext array.
-            ciphertext[i] = ciphertextByte;
-    
-            // Update the shift register: discard the first byte and append the ciphertext byte.
+
+            // XOR the first byte of the encrypted block with the current input byte, creating the current output byte.
+            byte outputByte = (byte) (encryptedBlock[0] ^ input[i]);
+
+            // Store the current output byte in the output array.
+            output[i] = outputByte;
+
+            // Update the shift register: discard the first (oldest) byte and append the newly created byte if encrypting
+            // or the current input byte if decrypting.
             shiftRegister = Arrays.copyOfRange(shiftRegister, 1, shiftRegister.length);
-            shiftRegister = appendByte(shiftRegister, ciphertextByte);
+            shiftRegister = appendByte(shiftRegister, isEncrypt ? outputByte : input[i]);
         }
-    
-        // Return the final ciphertext.
-        return ciphertext;
+
+        // Return the output (either ciphertext or plaintext).
+        return output;
     }
-    
+
+    // Function to perform encryption in Cipher Feedback (CFB) mode.
+    public byte[] cfbEncrypt(byte[] plaintext, byte[] iv) throws Exception {
+        // Padding the plaintext to make its length a multiple of the block size.
+        byte[] paddedPlaintext = pad(plaintext);
+
+        // Return the resulting ciphertext.
+        return cfbMode(paddedPlaintext, iv, true);
+    }
+
     public byte[] cfbDecrypt(byte[] ciphertext, byte[] iv) throws Exception {
-        byte[] plaintext = new byte[ciphertext.length];
-    
-        // Initialize the shift register with the IV.
-        byte[] shiftRegister = iv;
-    
-        // For each byte of ciphertext,
-        for (int i = 0; i < ciphertext.length; i++) {
-            // Encrypt the shift register using double AES.
-            byte[] encryptedBlock = doubleAesEncrypt(shiftRegister);
-    
-            // XOR the first byte of the encrypted block with the current ciphertext byte.
-            byte plaintextByte = (byte) (encryptedBlock[0] ^ ciphertext[i]);
-    
-            // Add the plaintext byte to the plaintext array.
-            plaintext[i] = plaintextByte;
-    
-            // Update the shift register: discard the first byte and append the current ciphertext byte.
-            shiftRegister = Arrays.copyOfRange(shiftRegister, 1, shiftRegister.length);
-            shiftRegister = appendByte(shiftRegister, ciphertext[i]);
-        }
-    
-        // Unpad the plaintext before returning it.
+        byte[] plaintext = cfbMode(ciphertext, iv, false);
+
+        // Remove the padding from the decrypted plaintext.
         return unpad(plaintext);
     }
 
