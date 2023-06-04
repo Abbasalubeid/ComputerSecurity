@@ -1,9 +1,7 @@
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.*;
-
 
 public class DoubleAesModes {
 
@@ -18,9 +16,9 @@ public class DoubleAesModes {
     public DoubleAesModes(byte[] key1Bytes, byte[] key2Bytes) {
         this.key1 = new SecretKeySpec(key1Bytes, AES);
         this.key2 = new SecretKeySpec(key2Bytes, AES);
-        SecureRandom random = new SecureRandom();
         this.iv = new byte[BLOCK_SIZE];
-        random.nextBytes(this.iv);
+        System.arraycopy(key1Bytes, 0, iv, 0, BLOCK_SIZE / 2);
+        System.arraycopy(key2Bytes, 0, iv, BLOCK_SIZE / 2, BLOCK_SIZE / 2);
     }
 
     // Bitwise XOR on two byte arrays.
@@ -230,28 +228,5 @@ public class DoubleAesModes {
     public byte[] ctrDecrypt(byte[] ciphertext) throws Exception {
         // Initialization of CTR mode decryption is identical to encryption.
         return ctrEncrypt(ciphertext);
-    }
-    public static void main(String[] args) throws Exception {
-        byte[] key1 = "0123456789abcdef".getBytes(); // 16 bytes
-        byte[] key2 = "fedcba9876543210".getBytes(); // 16 bytes
-        DoubleAesModes doubleAesModes = new DoubleAesModes(key1, key2);
-
-        String plaintext = "This is a test message.";
-        byte[] plaintextBytes = plaintext.getBytes();
-
-        byte[] ciphertextCbc = doubleAesModes.cbcEncrypt(plaintextBytes);
-        System.out.println("CBC ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCbc));
-        byte[] decryptedCbc = doubleAesModes.cbcDecrypt(ciphertextCbc);
-        System.out.println("CBC decrypted: " + new String(decryptedCbc));
-
-        byte[] ciphertextCfb = doubleAesModes.cfbEncrypt(plaintextBytes);
-        System.out.println("CFB ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCfb));
-        byte[] decryptedCfb = doubleAesModes.cfbDecrypt(ciphertextCfb);
-        System.out.println("CFB decrypted: " + new String(decryptedCfb));
-
-        byte[] ciphertextCtr = doubleAesModes.ctrEncrypt(plaintextBytes);
-        System.out.println("CTR ciphertext: " + Base64.getEncoder().encodeToString(ciphertextCtr));
-        byte[] decryptedCtr = doubleAesModes.ctrDecrypt(ciphertextCtr);
-        System.out.println("CTR decrypted: " + new String(decryptedCtr));
     }
 }
