@@ -189,10 +189,8 @@ public class DoubleAesModes {
     
             // Ensure the counterBytes is of length BLOCK_SIZE
             if (counterBytes.length < BLOCK_SIZE) {
-                // Pad counterBytes with leading zeros if it's shorter
-                byte[] temp = new byte[BLOCK_SIZE];
-                System.arraycopy(counterBytes, 0, temp, BLOCK_SIZE - counterBytes.length, counterBytes.length);
-                counterBytes = temp;
+               // Pad counterBytes if it's shorter
+                counterBytes = pad(counterBytes);
             } else if (counterBytes.length > BLOCK_SIZE) {
                 // Trim counterBytes if it's longer
                 counterBytes = Arrays.copyOfRange(counterBytes, counterBytes.length - BLOCK_SIZE, counterBytes.length);
