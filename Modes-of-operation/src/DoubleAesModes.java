@@ -160,18 +160,11 @@ public class DoubleAesModes {
     }
 
     public byte[] cfbEncrypt(byte[] plaintext) throws Exception {
-        // Padding the plaintext to make its length a multiple of the block size.
-        byte[] paddedPlaintext = pad(plaintext);
-
-        // Return the resulting ciphertext.
-        return cfbMode(paddedPlaintext, true);
+        return cfbMode(plaintext, true);
     }
 
     public byte[] cfbDecrypt(byte[] ciphertext) throws Exception {
-        byte[] plaintext = cfbMode(ciphertext, false);
-
-        // Remove the padding from the decrypted plaintext.
-        return unpad(plaintext);
+        return cfbMode(ciphertext, false);
     }
 
     // A helper function to append a byte to a byte array.
