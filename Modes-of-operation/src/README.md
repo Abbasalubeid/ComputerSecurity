@@ -7,8 +7,6 @@ This is a Java application that allows the encryption and decryption of files us
 
 - `DoubleAes.java`: Contains the main class DoubleAes, which serves as a command-line interface (CLI) for interacting with the DoubleAesModes class.
 
-- `report.pdf`: Provides a detailed report explaining the implementation process.
-
 ## How to Compile and Run
 
 1. Ensure you have a Java development environment (JDK) installed on your system.
